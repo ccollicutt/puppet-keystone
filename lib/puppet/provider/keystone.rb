@@ -23,7 +23,8 @@ class Puppet::Provider::Keystone < Puppet::Provider
     return admin_endpoint if admin_endpoint
 
     admin_port = keystone_file['DEFAULT']['admin_port'] ? keystone_file['DEFAULT']['admin_port'].strip : '35357'
-    ssl = keystone_file['ssl'] && keystone_file['ssl']['enable'] ? keystone_file['ssl']['enable'].downcase == 'true' : false
+    ssl = keystone_file['ssl'] && keystone_file['ssl']['enable'] ? keystone_file['ssl']['enable'].strip.downcase == 'true' : false
+
     protocol = ssl ? 'https' : 'http'
     if keystone_file and keystone_file['DEFAULT'] and keystone_file['DEFAULT']['bind_host']
       host = keystone_file['DEFAULT']['bind_host'].strip
@@ -34,6 +35,8 @@ class Puppet::Provider::Keystone < Puppet::Provider
       host = "127.0.0.1"
     end
     "#{protocol}://#{host}:#{admin_port}/v2.0/"
+ #     "https://#{host}:#{admin_port}/v2.0/"
+
   end
 
   def self.keystone_file
@@ -77,13 +80,13 @@ class Puppet::Provider::Keystone < Puppet::Provider
     authenv = {:OS_SERVICE_TOKEN => admin_token}
     begin
       withenv authenv do
-        remove_warnings(keystone('--endpoint', admin_endpoint, args))
+        remove_warnings(keystone('--insecure', '--endpoint', admin_endpoint, args))
       end
     rescue Exception => e
       if (e.message =~ /\[Errno 111\] Connection refused/) or (e.message =~ /\(HTTP 400\)/) or (e.message =~ /HTTP Unable to establish connection/)
         sleep 10
         withenv authenv do
-          remove_warnings(keystone('--endpoint', admin_endpoint, args))
+          remove_warnings(keystone('--insecure', '--endpoint', admin_endpoint, args))
         end
       else
         raise(e)
@@ -99,13 +102,13 @@ class Puppet::Provider::Keystone < Puppet::Provider
     authenv = {:OS_USERNAME => name, :OS_TENANT_NAME => tenant, :OS_PASSWORD => password}
     begin
       withenv authenv do
-        remove_warnings(keystone('--os-auth-url', admin_endpoint, args))
+        remove_warnings(keystone('--insecure', '--os-auth-url', admin_endpoint, args))
       end
     rescue Exception => e
       if (e.message =~ /\[Errno 111\] Connection refused/) or (e.message =~ /\(HTTP 400\)/) or (e.message =~ /HTTP Unable to establish connection/)
         sleep 10
         withenv authenv do
-          remove_warnings(keystone('--os-auth-url', admin_endpoint, args))
+          remove_warnings(keystone('--insecure', '--os-auth-url', admin_endpoint, args))
         end
       else
         raise(e)

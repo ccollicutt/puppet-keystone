@@ -47,8 +47,8 @@ class keystone::endpoint(
   keystone_endpoint { "${region}/keystone":
     ensure       => present,
     public_url   => "${public_protocol}://${public_address}:${public_port}/${version}",
-    admin_url    => "http://${admin_address}:${admin_port}/${version}",
-    internal_url => "http://${internal_address}:${real_internal_port}/${version}",
+    admin_url    => "${public_protocol}:://${admin_address}:${admin_port}/${version}",
+    internal_url => "${public_protocol}:://${internal_address}:${real_internal_port}/${version}",
     region       => $region,
   }
 }
